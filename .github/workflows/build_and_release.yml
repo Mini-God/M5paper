@@ -1,0 +1,38 @@
+name: Build and Release ESP32 Firmware
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build with ESP-IDF
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v5.0
+          target: esp32
+          path: "."
+
+      - name: Copy firmware to stable filename
+        run: cp build/m5paper_core.bin firmware.bin
+
+      - name: Publish latest firmware release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest Firmware
+          files: firmware.bin
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
